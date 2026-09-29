@@ -1,6 +1,6 @@
 # Einführung in die Statistische Datenanalyse mit R -- 3. Auflage
 
-<p align="center"><img src="Titelbild.jpeg" width="500"></p>
+<p align="center"><img src="Titelbild.jpeg" width="750"></p>
 
 In diesem Repository finden Sie die Dateien für mein Buch "Einführung in die Statistische Datenanalyse mit R" (3. Auflage).
 
