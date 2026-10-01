@@ -1,0 +1,654 @@
+---
+title: "Einführung in die Statistische Datenanalyse mit R - 3. Auflage"
+author: "<span style='display: block; text-align: center; font-size: 1.5em;'>Matthias Kohl</span>"
+date: "<span style='display: block; text-align: center; font-size: 1.3em;'>Oktober 2026</span>"
+lang: de
+
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    pandoc_args: ["--number-offset=1"]
+    theme: cerulean
+    highlight: kate
+    code_folding: show
+    df_print: paged
+    fig_retina: 2
+      
+knitr:
+  opts_chunk:
+    echo: true
+    warning: false
+    message: false
+    fig.align: center
+---
+
+<div style="height: 5em;"></div>
+
+# Deskriptive Statistik
+
+## Grundlagen
+
+## Exkurs: Datenimport und -export mit R
+
+## Import des ITS-Datensatzes
+
+```{r eval=FALSE}
+getwd()
+```
+
+```{r eval=FALSE}
+setwd("!!! Hier steht der Pfad zu den Dateien !!!")
+```
+
+```{r}
+ITSDaten <- read.csv2(file = "ITSDaten.csv", fileEncoding = "utf8", 
+                      stringsAsFactors = TRUE)
+```
+
+```{r eval=FALSE}
+Link <- "https://raw.githubusercontent.com/stamats/ESDR/master/ITSDaten.csv"
+ITSDaten <- read.csv2(file = Link, fileEncoding = "utf8")
+```
+
+```{r}
+ls()
+```
+
+```{r eval=FALSE}
+View(ITSDaten)
+```
+
+```{r}
+str(ITSDaten)
+```
+
+## Exkurs: Erweiterungspakete installieren
+
+```{r eval=FALSE}
+install.packages(c("DescTools", "scales", "ggplot2", "ggmosaic2", 
+                   "MKdescr", "XICOR", "ggbeeswarm"))
+```
+
+```{r}
+library(DescTools)
+library(scales)
+library(ggplot2)
+library(ggmosaic2)
+library(MKdescr)
+library(XICOR)
+library(ggbeeswarm)
+```
+
+## Kategoriale Variablen
+
+### Univariate Analyse
+
+```{r}
+table(ITSDaten$OP)
+```
+
+```{r}
+table(ITSDaten$OP)/nrow(ITSDaten)
+```
+
+```{r}
+table(ITSDaten$OP, useNA = "ifany")/nrow(ITSDaten)
+```
+
+```{r}
+Freq(ITSDaten$OP)
+```
+
+```{r fig.width=9}
+barplot(table(ITSDaten$OP))
+```
+
+```{r fig.width=9}
+barplot(table(ITSDaten$OP), 
+        main = "Häufigkeitsverteilung der Operationsarten",
+        ylab = "Absolute Häufigkeiten")
+```
+
+```{r fig.height = 5, fig.width=6}
+## Anlegen der Daten
+ggplot(ITSDaten, aes(x=OP)) +
+  ## Hinzufügen der Balken für die relativen Häufigkeiten
+  geom_bar(aes(y = after_stat(count)/sum(after_stat(count))), width = 0.5) +
+  ## Relative Häufigkeiten in Prozent
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  ## Titel
+  ggtitle("Häufigkeitsverteilung der Operationsarten") + 
+  ## Beschriftung der y-Achse
+  ylab("Relative Häufigkeit [%]")
+```
+
+```{r fig.height = 5, fig.width = 5}
+pie(table(ITSDaten$OP), main = "Häufigkeitsverteilung der Operationsarten")
+```
+
+```{r}
+ceiling(c(2.01, 3.88))
+```
+
+```{r}
+## Aneinanderhängen von Zahlen zu einem Vektor
+x <- c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+## Zahlenfolge: Beginn = 2, Ende = 20, Abstand = 2
+x <- seq(from = 2, to = 20, by = 2)
+```
+
+```{r}
+x
+## R default
+quantile(x, probs = 0.2)
+## Von SAS Software verwendet
+quantile(x, type = 3, probs = 0.2)
+## Von SPSS und Minitab Software verwendet
+quantile(x, type = 6, probs = 0.2)
+```
+
+```{r fig.height=5, fig.width=7}
+illustrate.quantile(x, alpha = 0.2)
+```
+
+```{r}
+median(ITSDaten$SAPS.II)
+## alternativ auch möglich
+quantile(ITSDaten$SAPS.II, probs = 0.5)
+```
+
+```{r}
+## Intervalllänge
+IQR(ITSDaten$SAPS.II)
+## Bestimmung des IQR-Intervalls
+quantile(ITSDaten$SAPS.II, probs = c(0.25, 0.75))
+```
+
+```{r}
+mad(ITSDaten$SAPS.II, constant = 1.0)
+```
+
+```{r}
+mad(ITSDaten$SAPS.II)
+```
+
+```{r}
+sIQR(ITSDaten$SAPS.II)
+```
+
+```{r fig.height=5, fig.width=6}
+## Anlegen der Daten
+ggplot(ITSDaten, aes(x=SAPS.II)) +
+  ## Hinzufügen der Balken
+  geom_bar(aes(y = after_stat(count)/sum(after_stat(count)))) +
+  ## Relative Häufigkeiten in Prozent
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  ## Titel
+  ggtitle("Häufigkeitsverteilung für den SAPS II Score") + 
+  ## Beschriftung von x- und y-Achse
+  xlab("SAPS II Score") + ylab("Relative Häufigkeit [%]")
+```
+
+```{r fig.height=5.5, fig.width=7.5}
+illustrate.boxplot(ITSDaten$SAPS.II)
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
+  ggtitle("Verteilung des SAPS II Scores") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
+  geom_point() + ggtitle("Verteilung des SAPS II Scores") + 
+  ## keine Achsenbeschriftung für die x-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
+  geom_point(alpha = 0.1) + ggtitle("Verteilung des SAPS II Scores") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
+  geom_jitter(height = 0.1, width = 0, alpha = 0.2) + 
+  ggtitle("Verteilung des SAPS II Scores") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
+  geom_beeswarm(orientation = "y", cex = 1.25) + 
+  ggtitle("Verteilung des SAPS II Scores") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
+  geom_quasirandom(orientation = "y", cex = 1.25) + 
+  ggtitle("Verteilung des SAPS II Scores") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
+  geom_dotplot(y = 1, stackdir = "center", binwidth = 3, dotsize = 0.3) +
+  ggtitle("Verteilung des SAPS II Scores") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+```
+
+```{r}
+x <- c(2, 4, 6, 8, 10, 12, 14, 16, 18, 20)
+quantile(x, probs = c(0.5, 0.75, 0.9, 0.95))
+```
+
+```{r}
+x <- c(2, 4, 6, 8, 10, 12, 14, 16, 18, 200)
+quantile(x, probs = c(0.5, 0.75, 0.9, 0.95))
+```
+
+```{r fig.width = 5, fig.height = 5}
+plot(ecdf(ITSDaten$SAPS.II), main = "Empirische Verteilungsfunktion",
+     xlab = "SAPS II", do.points = FALSE)
+```
+
+```{r fig.width = 5, fig.height = 5}
+ggplot(ITSDaten, aes(x = SAPS.II)) + stat_ecdf() + xlab("SAPS II") + 
+  ylab("Fn(x)") + ggtitle("Empirische Verteilungsfunktion")
+```
+
+### Bivariate Analyse
+
+```{r}
+table(ITSDaten$Geschlecht, ITSDaten$OP)
+```
+
+```{r}
+proportions(table(ITSDaten$Geschlecht, ITSDaten$OP), margin = 1)
+```
+
+```{r}
+round(100*proportions(table(ITSDaten$Geschlecht, ITSDaten$OP), margin = 1), 1)
+```
+
+```{r}
+PercTable(table(ITSDaten$Geschlecht, ITSDaten$OP), rfrq = "010")
+```
+
+```{r}
+Phi(table(ITSDaten$Geschlecht, ITSDaten$OP))
+ContCoef(table(ITSDaten$Geschlecht, ITSDaten$OP))
+CramerV(table(ITSDaten$Geschlecht, ITSDaten$OP))
+```
+
+```{r fig.width=9}
+barplot(round(100*proportions(table(ITSDaten$Geschlecht, ITSDaten$OP), 
+                             margin = 1), 1),
+        beside = TRUE, legend.text = TRUE, ylab = "Relative Häufigkeit [%]",
+        main = "Zusammenhang zwischen Geschlecht und Art der OP")
+```
+
+```{r fig.height=6, fig.width=7}
+ggplot(ITSDaten, aes(x = OP, fill = Geschlecht)) +
+  geom_bar(aes(y = after_stat(count)/tapply(after_stat(count),
+                                            after_stat(fill), 
+                                            sum)[after_stat(fill)]), 
+           position = "dodge") + scale_fill_grey() + 
+  scale_y_continuous(labels = percent_format(accuracy = 1)) +
+  ylab("Relative Häufigkeit [%]") + xlab("Art der OP") +
+  ggtitle("Zusammenhang zwischen Geschlecht und Art der OP")
+```
+
+```{r}
+tapply(ITSDaten$OP, ITSDaten$Geschlecht, table)
+```
+
+```{r}
+## Erzeugen der Kontingenztafel
+Tab <- xtabs( ~ Geschlecht + OP, data = ITSDaten)
+Tab
+## Umwandeln in einen data.frame
+DF <- as.data.frame(Tab)
+DF
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(DF, aes(weight = Freq, x = product(OP,Geschlecht), fill = OP)) +
+  geom_mosaic() + 
+  geom_mosaic_text(display_values = "observed", format_digits = 0,
+                   size = 3.5, colour = "white") +
+  ggtitle("Zusammenhang zwischen Geschlecht und Art der OP")
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(DF, aes(weight = Freq, x = product(OP,Geschlecht))) +
+  mosaic_settings(expected = "independence") +
+  geom_mosaic() + scale_fill_residual() +
+  geom_mosaic_text(display_values = "expected", format_digits = 1,
+                   size = 3.5, colour = "black") +
+  ggtitle("Zusammenhang zwischen Geschlecht und Art der OP") +
+  labs(subtitle = "Blau = mehr als erwartet, Rot = weniger als erwartet")
+```
+
+```{r}
+## Spearmans rho
+cor(ITSDaten$SAPS.II, ITSDaten$LOS, method = "spearman")
+## Kendalls tau
+cor(ITSDaten$SAPS.II, ITSDaten$LOS, method = "kendall")
+```
+
+```{r}
+## LOS als Funtion von SAPS.II
+xicor(ITSDaten$SAPS.II, ITSDaten$LOS)
+## SAPS.II als Funktion von LOS
+xicor(ITSDaten$LOS, ITSDaten$SAPS.II)
+```
+
+```{r fig.height=6, fig.width=6}
+plot(ITSDaten$SAPS.II, ITSDaten$LOS, xlab = "SAPS II", ylab = "LOS",
+     main = "LOS in Abhängigkeit von SAPS II")
+```
+
+```{r fig.height=5, fig.width=5}
+ggplot(ITSDaten, aes(x=SAPS.II, y=LOS)) +
+  ## shape = 19: etwas größerer Punkt
+  ## alpha = 0.25: Stärke des Blendings
+  geom_point(shape=19, alpha=0.25) +
+  ## Beschriftung
+  ggtitle("LOS in Abhängigkeit von SAPS II") + 
+  xlab("SAPS II") + ylab("LOS")
+```
+
+## Metrische Variablen
+
+### Univariate Analyse
+
+```{r}
+mean(ITSDaten$Temperatur)
+```
+
+```{r}
+round(mean(ITSDaten$Temperatur), 1)
+```
+
+```{r}
+median(ITSDaten$Temperatur)
+```
+
+```{r}
+round(mean(ITSDaten$LOS),1)
+median(ITSDaten$LOS)
+```
+
+```{r message=FALSE}
+log(Gmean(ITSDaten$Bilirubin))
+```
+
+```{r}
+mean(log(ITSDaten$Bilirubin))
+```
+
+```{r}
+exp(mean(log(ITSDaten$Bilirubin)))
+Gmean(ITSDaten$Bilirubin)
+```
+
+```{r}
+var(ITSDaten$Temperatur)
+sd(ITSDaten$Temperatur)
+```
+
+```{r}
+n <- nrow(ITSDaten)
+(n-1)/n*var(ITSDaten$Temperatur)
+sqrt((n-1)/n)*sd(ITSDaten$Temperatur)
+```
+
+```{r}
+sd(ITSDaten$Temperatur)
+mad(ITSDaten$Temperatur)
+sIQR(ITSDaten$Temperatur)
+```
+
+```{r}
+CV(ITSDaten$Temperatur)
+## standardisiert
+medCV(ITSDaten$Temperatur)
+iqrCV(ITSDaten$Temperatur)
+## unstandardisiert
+medCV(ITSDaten$Temperatur, constant = 1)
+iqrCV(ITSDaten$Temperatur, constant = 1)
+```
+
+```{r}
+log(Gsd(ITSDaten$Bilirubin))
+sd(log(ITSDaten$Bilirubin))
+```
+
+```{r}
+Skew(ITSDaten$Temperatur)
+```
+
+```{r}
+## Patient 398
+ITSDaten$Temperatur[398]
+```
+
+```{r}
+## ohne Patient 398
+Skew(ITSDaten$Temperatur[-398])
+```
+
+```{r}
+## ohne Patient 398
+sd(ITSDaten$Temperatur[-398])
+```
+
+```{r}
+Skew(ITSDaten$LOS)
+```
+
+```{r}
+Kurt(ITSDaten$Temperatur)
+## ohne Patient 398
+Kurt(ITSDaten$Temperatur[-398])
+```
+
+```{r}
+Kurt(ITSDaten$LOS)
+```
+
+```{r fig.height=5, fig.width=5}
+## Boxplot an der Stelle y = 1
+ggplot(ITSDaten, aes(x = Temperatur, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("Maximale Körpertemperatur") +
+  geom_jitter(height = 0.1, width = 0, alpha = 0.1) + 
+  ggtitle("Verteilung der maximalen Körpertemperatur") +
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank()) +
+  annotate(x = 9.1, y = 1.15, geom = "text", label = "Patient 398", hjust = 0.1)
+```
+
+```{r fig.height=5, fig.width=5}
+hist(ITSDaten$Temperatur, breaks = seq(from = 9.0, to = 42, by = 0.5),
+     main = "Verteilung der maximalen Körpertemperatur", 
+     xlab = "Maximale Körpertemperatur", ylab = "Absolute Häufigkeit")
+```
+
+```{r fig.height=5, fig.width=5}
+hist(ITSDaten$Temperatur, breaks = seq(from = 9.0, to = 42, by = 0.5),
+     main = "Verteilung der maximalen Körpertemperatur", 
+     xlab = "Maximale Körpertemperatur",
+     ylab = "Absolute Häufigkeit", xlim = c(33,43))
+abline(v = median(ITSDaten$Temperatur), lwd = 2)
+```
+
+```{r fig.height=5, fig.width=5}
+ggplot(ITSDaten, aes(x = LOS)) + geom_histogram(binwidth = 1) +
+  xlab("Aufenthaltsdauer in Tagen") + ylab("Absolute Häufigkeit") +
+  ggtitle("Verteilung von LOS")
+```
+
+```{r fig.height=5, fig.width=5}
+plot(density(ITSDaten$Temperatur[-398]), xlab = "Maximale Körpertemperatur",
+     ylab = "Dichte", main = "Verteilung der maximalen Körpertemperatur")
+```
+
+```{r fig.height=5, fig.width=5}
+hist(ITSDaten$Temperatur[-398], breaks = seq(from = 33, to = 42, by = 0.5),
+     xlab = "Maximale Körpertemperatur", ylab = "Dichte", freq = FALSE,
+     main = "Verteilung der maximalen Körpertemperatur")
+lines(density(ITSDaten$Temperatur[-398]))
+```
+
+```{r fig.height=5, fig.width=5}
+ggplot(ITSDaten[-398,], aes(x=Temperatur)) +
+  geom_histogram(aes(y=after_stat(density)), binwidth = 0.5) +
+  geom_density(color = "orange") + ylab("Dichte") +
+  xlab("Maximale Körpertemperatur") +
+  ggtitle("Verteilung der maximalen Körpertemperatur")
+```
+
+```{r fig.height=5, fig.width=5}
+ggplot(ITSDaten[-398,], aes(x=Temperatur)) +
+  geom_histogram(aes(y=after_stat(density)), 
+                 breaks = seq(from = 33, to = 42, by = 0.5), 
+                 closed = "right") +
+  geom_density(color = "orange") + ylab("Dichte") +
+  xlab("Maximale Körpertemperatur - closed = 'right'") +
+  ggtitle("Verteilung der maximalen Körpertemperatur")
+```
+
+```{r fig.height=5, fig.width=5}
+ggplot(ITSDaten[-398,], aes(x = 1, y = Temperatur)) +
+  geom_violin() + xlim(c(0,2)) +
+  ylab("Maximale Körpertemperatur") +
+  ggtitle("Verteilung der maximalen Körpertemperatur") +
+  ## keine Achsenbeschriftung für die x-Achse
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
+```
+
+```{r fig.height=5, fig.width=5}
+ggplot(ITSDaten[-398,], aes(x = 1, y = Temperatur)) +
+  geom_violin() + geom_boxplot(width = 0.4) + xlim(c(0,2)) +
+  ylab("Maximale Körpertemperatur") +
+  ggtitle("Verteilung der maximalen Körpertemperatur") +
+  ## keine Achsenbeschriftung für die x-Achse
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
+```
+
+```{r fig.height=5, fig.width=5}
+plot(ecdf(ITSDaten$Temperatur[-398]), 
+     main = "Empirische Verteilungsfunktion\nder maximalen Körpertemperatur",
+     xlab = "Maximale Körpertemperatur", do.points = FALSE)
+```
+
+```{r fig.height=5, fig.width=5}
+ggplot(ITSDaten[-398,], aes(x = Temperatur)) + stat_ecdf() + 
+  xlab("Maximale Körpertemperatur") + ylab("Fn(x)") + 
+  ggtitle("Empirische Verteilungsfunktion\nder maximalen Körpertemperatur")
+```
+
+### Bivariate Analyse
+
+```{r}
+cor(ITSDaten$Temperatur, ITSDaten$Herzfrequenz)
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten, aes(x=Temperatur, y=Herzfrequenz)) +
+  ## shape = 19: etwas größerer Punkt
+  ## alpha = 0.25: Stärke des Blendings
+  geom_point(shape=19, alpha=0.25) +
+  ## Beschriftung
+  ggtitle("Maximale Herzfrequenz versus maximale Körpertemperatur") + 
+  xlab("Maximale Körpertemperatur") + ylab("Maximale Herzfrequenz")
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten, aes(x=Temperatur, y=Herzfrequenz)) +
+  ## shape = 19: etwas größerer Punkt
+  ## alpha = 0.25: Stärke des Blendings
+  geom_point(shape=19, alpha=0.25) +
+  ## Lineare Regressionsgeraden
+  geom_smooth(formula = y ~ x, data = ITSDaten[-398,], method = "lm", 
+              se = FALSE) +
+  geom_smooth(formula = y ~ x, method = "lm", se = FALSE, color = "red") +
+  annotate("text", x = c(25, 25), y = c(110, 105), 
+           label = c("ohne Patient 398", "mit Patient 398"), 
+           color = c("blue", "red")) +
+  ## Beschriftung
+  ggtitle("Maximale Herzfrequenz versus maximale Körpertemperatur") + 
+  xlab("Maximale Körpertemperatur") + ylab("Maximale Herzfrequenz")
+```
+
+```{r}
+cor(ITSDaten$Temperatur[-398], ITSDaten$Herzfrequenz[-398])
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten[-398,], aes(x=Temperatur, y=Herzfrequenz)) +
+  ## shape = 19: etwas größerer Punkt
+  ## alpha = 0.25: Stärke des Blendings
+  geom_point(shape=19, alpha=0.25) +
+  ## Lineare Regressionsgerade
+  geom_smooth(formula = y ~ x, method = "lm", se = FALSE) +
+  ## Beschriftung
+  ggtitle("Maximale Herzfrequenz versus maximale Körpertemperatur") + 
+  xlab("Maximale Körpertemperatur") + ylab("Maximale Herzfrequenz")
+```
+
+```{r}
+## Spearmans rho
+cor(ITSDaten$Temperatur, ITSDaten$Herzfrequenz, method = "spearman")
+cor(ITSDaten$Temperatur[-398], ITSDaten$Herzfrequenz[-398], method = "spearman")
+## Kendalls tau
+cor(ITSDaten$Temperatur, ITSDaten$Herzfrequenz, method = "kendall")
+cor(ITSDaten$Temperatur[-398], ITSDaten$Herzfrequenz[-398], method = "kendall")
+## Chatterjees xi
+xicor(ITSDaten$Temperatur, ITSDaten$Herzfrequenz)
+xicor(ITSDaten$Temperatur[-398], ITSDaten$Herzfrequenz[-398])
+xicor(ITSDaten$Herzfrequenz, ITSDaten$Temperatur)
+xicor(ITSDaten$Herzfrequenz[-398], ITSDaten$Temperatur[-398])
+```
+
+```{r}
+cor(rank(ITSDaten$Temperatur), rank(ITSDaten$Herzfrequenz))
+```
+
+## Übungsaufgaben
+
+### Theoretische Aufgaben
+
+### Praktische Aufgaben
+
