@@ -1,0 +1,312 @@
+---
+title: "Einführung in die Statistische Datenanalyse mit R - 3. Auflage"
+author: "<span style='display: block; text-align: center; font-size: 1.5em;'>Matthias Kohl</span>"
+date: "<span style='display: block; text-align: center; font-size: 1.3em;'>Oktober 2026</span>"
+lang: de
+
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    pandoc_args: ["--number-offset=1"]
+    theme: cerulean
+    highlight: kate
+    code_folding: show
+    df_print: paged
+    fig_retina: 2
+      
+knitr:
+  opts_chunk:
+    echo: true
+    warning: false
+    message: false
+    fig.align: center
+---
+
+<div style="height: 5em;"></div>
+
+# Farben und Diagramme
+
+```{r eval=FALSE}
+install.packages(c("RColorBrewer", "ggsci", "hexbin"))
+```
+
+```{r}
+library(ggplot2)
+library(ggbeeswarm)
+library(RColorBrewer)
+library(ggsci)
+library(hexbin)
+```
+
+## Farben
+
+```{r}
+display.brewer.all(type = "qual")
+```
+
+```{r}
+display.brewer.all(type = "seq")
+```
+
+```{r}
+display.brewer.all(type = "div")
+```
+
+```{r}
+## n = 5 Farben der Palette mit Namen Set1
+farben <- brewer.pal(n = 5, name = "Set1")
+farben
+```
+
+```{r}
+rgb(red = 228, green = 26, blue = 28, maxColorValue = 255)
+```
+
+```{r}
+str(colors())
+col2rgb("royalblue")
+```
+
+```{r fig.width=9}
+ITSDaten <- read.csv2(file = "ITSDaten.csv", fileEncoding = "utf8",
+                      stringsAsFactors = TRUE)
+barplot(table(ITSDaten$OP), main = "Häufigkeitsverteilung der Operationsarten",
+        ylab = "Absolute Häufigkeiten", col = farben)
+```
+
+```{r fig.height=6, fig.width=6}
+## Anlegen der Daten
+ggplot(ITSDaten, aes(x=OP)) +
+  ## Hinzufügen der Balken für die relativen Häufigkeiten
+  geom_bar(aes(y = 100*after_stat(count)/sum(after_stat(count))), 
+           width = 0.5, 
+  ## Füllen der Balken
+           fill = pal_npg()(5)) +
+  ## Titel und Beschriftung der y-Achse
+  ggtitle("Häufigkeitsverteilung der Operationsarten") + 
+  ## Beschriftung der y-Achse
+  ylab("Relative Häufigkeit in %")
+```
+
+```{r}
+## Erzeugen der Funktion
+pal_npg()
+## Erzeugen der Funktion und Aufrufen mit dem Wert 5
+pal_npg()(5)
+```
+
+```{r warning=TRUE}
+farben2 <- brewer.pal(n = 2, name = "Set1")
+farben2
+```
+
+```{r}
+farben2 <- brewer.pal(n = 3, name = "Set1")[1:2]
+farben2
+```
+
+```{r}
+farben3 <- pal_npg()(5)[c(5,1,3)]
+farben3
+```
+
+```{r}
+farben11 <- brewer.pal(n = 11, name = "RdYlBu")
+farben11
+```
+
+```{r}
+farben32 <- colorRampPalette(farben11)(32)
+farben32
+```
+
+## Exkurs: Export von Diagrammen
+
+```{r eval = FALSE}
+## 1. Öffnen des Grafikgerätes png mit height und width in Pixel
+png(file = "Beispiel_Bild.png", height = 640, width = 640)
+## 2. Erzeugen des Plots
+ggplot(ITSDaten, aes(x=OP)) +
+  geom_bar(aes(y = 100*after_stat(count)/sum(after_stat(count))), 
+           width = 0.5, fill = pal_npg()(5)) +
+  ggtitle("Häufigkeitsverteilung der Operationsarten") + 
+  ylab("Relative Häufigkeit in %")
+## 3. Beenden des Grafikgerätes
+dev.off()
+```
+
+## Diagramme
+
+```{r fig.width=9}
+farben <- brewer.pal(n = 5, name = "Set3")
+boxplot(SAPS.II ~ OP, data = ITSDaten, ylab = "SAPS II",
+        main = "SAPS II in Abhängigkeit von der Operationsart", col = farben)
+```
+
+```{r fig.height=5, fig.width=6}
+## Anlegen der Daten
+ggplot(ITSDaten, aes(x = OP, y = SAPS.II)) +
+  ## Boxplot mit den vorgegeben Farben
+  geom_boxplot(fill = farben) +
+  ## Beschriftung
+  ylab("SAPS II") + ggtitle("SAPS II in Abhängigkeit von der Operationsart")
+```
+
+```{r fig.height=5, fig.width=6}
+## Anlegen der Daten
+ggplot(ITSDaten, aes(x = OP, y = SAPS.II)) +
+  ## Boxplot mit den vorgegeben Farben
+  geom_boxplot(fill = farben) + 
+  geom_quasirandom(orientation = "x", cex = 1.25) + 
+  ## Beschriftung
+  ylab("SAPS II") + ggtitle("SAPS II in Abhängigkeit von der Operationsart")
+```
+
+```{r fig.height=5, fig.width=7.5}
+## Anlegen der Daten
+ggplot(ITSDaten, aes(x = OP, y = SAPS.II, fill = OP)) +
+  ## Boxplot mit den vorgegeben Farben
+  geom_boxplot() + scale_fill_manual(values = farben) +
+  geom_quasirandom(orientation = "x", cex = 1.25, show.legend = FALSE) + 
+  ## Beschriftung
+  ylab("SAPS II") + ggtitle("SAPS II in Abhängigkeit von der Operationsart")
+```
+
+```{r fig.height=5, fig.width=6}
+## Anlegen der Daten
+ggplot(ITSDaten, aes(x = OP, y = SAPS.II)) +
+  geom_violin() +
+  ## Boxplot mit den vorgegeben Farben
+  geom_boxplot(fill = farben, width = 0.4) + 
+  geom_quasirandom(orientation = "x", cex = 0.75, width = 0.2) + 
+  ## Beschriftung
+  ylab("SAPS II") + ggtitle("SAPS II in Abhängigkeit von der Operationsart")
+```
+
+```{r fig.height=5, fig.width=7.5}
+## Anlegen der Daten
+ggplot(ITSDaten, aes(x = OP, y = SAPS.II)) +
+  geom_violin(aes(fill = OP)) + scale_fill_manual(values = farben) +
+  ## Boxplot mit den vorgegeben Farben
+  geom_boxplot(width = 0.4) + 
+  geom_quasirandom(orientation = "x", cex = 0.75, width = 0.2) + 
+  ## Beschriftung
+  ylab("SAPS II") + ggtitle("SAPS II in Abhängigkeit von der Operationsart")
+```
+
+```{r fig.height=6, fig.width=6}
+farben <- colorRampPalette(rev(brewer.pal(5, "RdBu")))(21)
+hist(ITSDaten$Temperatur[-398], breaks = seq(from = 33.5, to = 42, by = 0.5),
+     main = "Verteilung der maximalen Körpertemperatur", 
+     ylab = "Absolute Häufigkeit", xlab = "Maximale Körpertemperatur", 
+     col = farben[c(1:5,10,11,12:21)])
+```
+
+```{r fig.height=5, fig.width=5}
+ggplot(ITSDaten[-398,], aes(x=Temperatur)) +
+  geom_histogram(breaks = seq(from = 33.5, to = 42, by = 0.5), 
+                 fill = farben[c(1:5,10,11,12:21)]) +
+  ylab("Absolute Häufigkeit") + xlab("Maximale Körpertemperatur") +
+  ggtitle("Verteilung der maximalen Körpertemperatur")
+```
+
+```{r fig.height=5, fig.width=5}
+ggplot(ITSDaten[-398,], aes(x=Temperatur)) +
+  geom_histogram(aes(y=after_stat(density)), 
+                 breaks = seq(from = 33.5, to = 42, by = 0.5), 
+                 fill = farben[c(1:5,10,11,12:21)]) +
+  geom_density() +
+  ylab("Dichte") + xlab("Maximale Körpertemperatur") +
+  ggtitle("Verteilung der maximalen Körpertemperatur")
+```
+
+```{r fig.height=5, fig.width=5}
+ggplot(ITSDaten[-398,], aes(x=Temperatur)) +
+  geom_histogram(aes(y=after_stat(density)), 
+                 breaks = seq(from = 33.5, to = 42, by = 0.5), 
+                 fill = farben[c(1:5,10,11,12:21)]) +
+  geom_density() + geom_rug() +
+  ylab("Dichte") + xlab("Maximale Körpertemperatur") +
+  ggtitle("Verteilung der maximalen Körpertemperatur")
+```
+
+```{r}
+## Anlegen eines leeren Vektors
+farbenGeschlecht <- character(nrow(ITSDaten))
+## Auffüllen mit transparenten Farben
+farbenGeschlecht[ITSDaten$Geschlecht == "weiblich"] <- "#E41A1C55"
+farbenGeschlecht[ITSDaten$Geschlecht == "männlich"] <- "#377EB855"
+```
+
+```{r fig.height=6, fig.width=6}
+plot(x = ITSDaten$Temperatur, y = ITSDaten$Herzfrequenz, pch = 19,
+     xlab = "Maximal Körpertemperatur", ylab = "Maximale Herzfrequenz",
+     main = "Maximale Herzfrequenz versus maximale Körpertemperatur",
+     col = farbenGeschlecht, xlim = c(33,43))
+legend(x = "topleft", legend = c("weiblich", "männlich"), pch = 19,
+       col = c("#E41A1C55", "#377EB855"))
+```
+
+```{r fig.height=5, fig.width=6}
+ggplot(ITSDaten[-398,], aes(x=Temperatur, y=Herzfrequenz, colour=Geschlecht)) +
+  ## shape = 19: etwas größerer Punkt
+  ## alpha = 0.4: Stärke des Blendings
+  geom_point(shape=19, alpha=0.4) +
+  ## Werte für die Farbgebung
+  scale_colour_manual(values = c("#377EB8", "#E41A1C")) +
+  ## Beschriftung
+  ggtitle("Maximale Herzfrequenz versus maximale Körpertemperatur") + 
+  xlab("Maximale Körpertemperatur") + ylab("Maximale Herzfrequenz")
+```
+
+```{r fig.height=5, fig.width=6}
+ggplot(ITSDaten[-398,], aes(x=Temperatur, y=Herzfrequenz)) +
+  stat_density2d(aes(fill = after_stat(density)), geom = "tile", 
+                 contour = FALSE) +
+  scale_fill_continuous(name = "Dichte", low = "white", high = "dodgerblue4") +
+  geom_point(alpha = 0.2) +
+  ## Beschriftung
+  ggtitle("Maximale Herzfrequenz versus maximale Körpertemperatur") + 
+  xlab("Maximale Körpertemperatur") + ylab("Maximale Herzfrequenz")
+```
+
+```{r fig.height=5, fig.width=6}
+ggplot(ITSDaten[-398,], aes(x=Temperatur, y=Herzfrequenz)) +
+  stat_density2d(aes(fill = after_stat(density)), geom = "tile", 
+                 contour = FALSE) +
+  scale_fill_continuous(name = "Dichte", low = "white", high = "dodgerblue4") +
+  geom_point(alpha = 0.2) +
+  ## Beschriftung
+  ggtitle("Maximale Herzfrequenz versus maximale Körpertemperatur") + 
+  xlab("Maximale Körpertemperatur") + ylab("Maximale Herzfrequenz") +
+  theme_light()
+```
+
+```{r fig.height=5, fig.width=6}
+ggplot(ITSDaten[-398,], aes(x=Temperatur, y=Herzfrequenz)) +
+  geom_hex(bins = 20) + 
+  scale_fill_gradient(low = "aliceblue", high = "dodgerblue4") +
+  ## Beschriftung
+  ggtitle("Maximale Herzfrequenz versus maximale Körpertemperatur") + 
+  xlab("Maximale Körpertemperatur") + ylab("Maximale Herzfrequenz")
+```
+
+```{r fig.height=5, fig.width=6}
+ggplot(ITSDaten[-398,], aes(x=Temperatur, y=Herzfrequenz)) +
+  geom_bin_2d(bins = 20) +
+  scale_fill_gradient(low = "aliceblue", high = "dodgerblue4") +
+  ## Beschriftung
+  ggtitle("Maximale Herzfrequenz versus maximale Körpertemperatur") + 
+  xlab("Maximale Körpertemperatur") + ylab("Maximale Herzfrequenz")
+```
+
+## Übungsaufgaben
+
+### Theoretische Aufgaben
+
+### Praktische Aufgaben
+
