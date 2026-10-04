@@ -50,7 +50,8 @@ ITSDaten <- read.csv2(file = "ITSDaten.csv", fileEncoding = "utf8",
 ```
 
 ```{r eval=FALSE}
-Link <- "https://raw.githubusercontent.com/stamats/ESDR3/refs/heads/main/ITSDaten.csv"
+Link <- paste0("https://raw.githubusercontent.com/stamats/ESDR3/", 
+               "refs/heads/main/ITSDaten.csv")
 ITSDaten <- read.csv2(file = Link, fileEncoding = "utf8")
 ```
 
@@ -66,11 +67,17 @@ View(ITSDaten)
 str(ITSDaten)
 ```
 
+```{r eval=FALSE}
+ITSDaten <- read.csv2(file = "ITSDaten.csv", fileEncoding = "utf8", 
+                      stringsAsFactors = TRUE, check.names = FALSE)
+```
+
 ## Exkurs: Erweiterungspakete installieren
 
 ```{r eval=FALSE}
 install.packages(c("DescTools", "scales", "ggplot2", "ggmosaic2", 
-                   "MKdescr", "XICOR", "ggbeeswarm"))
+                   "MKdescr", "XICOR", "ggbeeswarm", "classmap",
+                   "ggskewboxplots", "gridExtra"))
 ```
 
 ```{r}
@@ -81,6 +88,9 @@ library(ggmosaic2)
 library(MKdescr)
 library(XICOR)
 library(ggbeeswarm)
+library(classmap)
+library(ggskewboxplots)
+library(gridExtra)
 ```
 
 ## Kategoriale Variablen
@@ -101,6 +111,8 @@ table(ITSDaten$OP, useNA = "ifany")/nrow(ITSDaten)
 
 ```{r}
 Freq(ITSDaten$OP)
+## oder "sicherer"
+Freq(ITSDaten$OP, useNA = "ifany")
 ```
 
 ```{r fig.width=9}
@@ -180,7 +192,7 @@ mad(ITSDaten$SAPS.II)
 sIQR(ITSDaten$SAPS.II)
 ```
 
-```{r fig.height=5, fig.width=6}
+```{r fig.height=5, fig.width=6, message=FALSE}
 ## Anlegen der Daten
 ggplot(ITSDaten, aes(x=SAPS.II)) +
   ## Hinzufügen der Balken
@@ -188,9 +200,9 @@ ggplot(ITSDaten, aes(x=SAPS.II)) +
   ## Relative Häufigkeiten in Prozent
   scale_y_continuous(labels = percent_format(accuracy = 1)) +
   ## Titel
-  ggtitle("Häufigkeitsverteilung für den SAPS II Score") + 
+  ggtitle("Verteilung des SAPS-II-Scores") + 
   ## Beschriftung von x- und y-Achse
-  xlab("SAPS II Score") + ylab("Relative Häufigkeit [%]")
+  xlab("SAPS-II-Score") + ylab("Relative Häufigkeit [%]")
 ```
 
 ```{r fig.height=5.5, fig.width=7.5}
@@ -199,17 +211,22 @@ illustrate.boxplot(ITSDaten$SAPS.II)
 
 ```{r fig.height=6, fig.width=6}
 ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
-  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
-  ggtitle("Verteilung des SAPS II Scores") + 
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  ggtitle("Verteilung des SAPS-II-Scores") + 
   ## keine Achsenbeschriftung für die y-Achse
   ylab("") + theme(axis.ticks.y = element_blank(), 
                    axis.text.y = element_blank())
 ```
 
+```{r fig.height=5, fig.width=5}
+boxplot(1:3, horizontal = TRUE, 
+        main = "Ein 'perfekter' Boxplot mit 3 Beobachtungen")
+```
+
 ```{r fig.height=6, fig.width=6}
 ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
-  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
-  geom_point() + ggtitle("Verteilung des SAPS II Scores") + 
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_point() + ggtitle("Verteilung des SAPS-II-Scores") + 
   ## keine Achsenbeschriftung für die x-Achse
   ylab("") + theme(axis.ticks.y = element_blank(), 
                    axis.text.y = element_blank())
@@ -217,8 +234,8 @@ ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
 
 ```{r fig.height=6, fig.width=6}
 ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
-  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
-  geom_point(alpha = 0.1) + ggtitle("Verteilung des SAPS II Scores") + 
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_point(alpha = 0.1) + ggtitle("Verteilung des SAPS-II-Scores") + 
   ## keine Achsenbeschriftung für die y-Achse
   ylab("") + theme(axis.ticks.y = element_blank(), 
                    axis.text.y = element_blank())
@@ -226,9 +243,9 @@ ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
 
 ```{r fig.height=6, fig.width=6}
 ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
-  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
   geom_jitter(height = 0.1, width = 0, alpha = 0.2) + 
-  ggtitle("Verteilung des SAPS II Scores") + 
+  ggtitle("Verteilung des SAPS-II-Scores") + 
   ## keine Achsenbeschriftung für die y-Achse
   ylab("") + theme(axis.ticks.y = element_blank(), 
                    axis.text.y = element_blank())
@@ -236,9 +253,9 @@ ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
 
 ```{r fig.height=6, fig.width=6}
 ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
-  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
   geom_beeswarm(orientation = "y", cex = 1.25) + 
-  ggtitle("Verteilung des SAPS II Scores") + 
+  ggtitle("Verteilung des SAPS-II-Scores") + 
   ## keine Achsenbeschriftung für die y-Achse
   ylab("") + theme(axis.ticks.y = element_blank(), 
                    axis.text.y = element_blank())
@@ -246,22 +263,107 @@ ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
 
 ```{r fig.height=6, fig.width=6}
 ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
-  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
   geom_quasirandom(orientation = "y", cex = 1.25) + 
-  ggtitle("Verteilung des SAPS II Scores") + 
+  ggtitle("Verteilung des SAPS-II-Scores") + 
   ## keine Achsenbeschriftung für die y-Achse
   ylab("") + theme(axis.ticks.y = element_blank(), 
                    axis.text.y = element_blank())
 ```
 
-```{r fig.height=6, fig.width=6}
-ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
-  geom_boxplot() + ylim(0, 2) + xlab("SAPS II Score") +
-  geom_dotplot(y = 1, stackdir = "center", binwidth = 3, dotsize = 0.3) +
-  ggtitle("Verteilung des SAPS II Scores") + 
+```{r fig.height=12}
+gg1 <- ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_quasirandom(orientation = "y", cex = 1.25, alpha = 0.3) + 
+  ggtitle("Methode quasirandom (default)") + 
   ## keine Achsenbeschriftung für die y-Achse
   ylab("") + theme(axis.ticks.y = element_blank(), 
                    axis.text.y = element_blank())
+gg2 <- ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_quasirandom(orientation = "y", cex = 1.25, alpha = 0.3, 
+                   method = "pseudorandom", nbins = 500) + 
+  ggtitle("Methode pseudorandom") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+gg3 <- ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_quasirandom(orientation = "y", cex = 1.25, alpha = 0.3, 
+                   method = "smiley", nbins = 500) + 
+  ggtitle("Methode smiley") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+gg4 <- ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_quasirandom(orientation = "y", cex = 1.25, alpha = 0.3, 
+                   method = "maxout", nbins = 500) + 
+  ggtitle("Methode maxout") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+gg5 <- ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_quasirandom(orientation = "y", cex = 1.25, alpha = 0.3, 
+                   method = "frowney", nbins = 500) + 
+  ggtitle("Methode frowney") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+gg6 <- ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_quasirandom(orientation = "y", cex = 1.25, alpha = 0.3, 
+                   method = "minout", nbins = 500) + 
+  ggtitle("Methode minout") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+gg7 <- ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_quasirandom(orientation = "y", cex = 1.25, alpha = 0.3, 
+                   method = "tukey", nbins = 500) + 
+  ggtitle("Methode tukey") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+gg8 <- ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_quasirandom(orientation = "y", cex = 1.25, alpha = 0.3, 
+                   method = "tukeyDense", nbins = 500) + 
+  ggtitle("Methode tukeyDense") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+grid.arrange(gg1, gg2, gg3, gg4, gg5, gg6, gg7, gg8, ncol = 2)
+```
+
+```{r fig.height=6, fig.width=6}
+ggplot(ITSDaten, aes(x = SAPS.II, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("SAPS-II-Score") +
+  geom_dotplot(y = 1, stackdir = "center", binwidth = 3, dotsize = 0.3) +
+  ggtitle("Verteilung des SAPS-II-Scores") + 
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+```
+
+```{r fig.height=5, fig.width=5}
+bixplot(ITSDaten$SAPS.II, names = "", horizontal = TRUE, 
+        xlab = "SAPS-II-Score", main = "Bixplot des SAPS-II-Scores")
+```
+
+```{r fig.height=5, fig.width=5}
+res.bix <- bixplot(ITSDaten$SAPS.II, names = "", horizontal = TRUE, 
+                   xlab = "SAPS-II-Score", main = "Bixplot des SAPS-II-Scores",
+                   diplevel = 0.1)
+```
+
+```{r}
+## Median 1. Cluster
+res.bix[[3]]$cluster_1$fivenumbersummary[3]
+## Median 2. Cluster
+res.bix[[3]]$cluster_2$fivenumbersummary[3]
 ```
 
 ```{r}
@@ -276,11 +378,11 @@ quantile(x, probs = c(0.5, 0.75, 0.9, 0.95))
 
 ```{r fig.width = 5, fig.height = 5}
 plot(ecdf(ITSDaten$SAPS.II), main = "Empirische Verteilungsfunktion",
-     xlab = "SAPS II", do.points = FALSE)
+     xlab = "SAPS-II-Score", do.points = FALSE)
 ```
 
 ```{r fig.width = 5, fig.height = 5}
-ggplot(ITSDaten, aes(x = SAPS.II)) + stat_ecdf() + xlab("SAPS II") + 
+ggplot(ITSDaten, aes(x = SAPS.II)) + stat_ecdf() + xlab("SAPS-II-Score") + 
   ylab("Fn(x)") + ggtitle("Empirische Verteilungsfunktion")
 ```
 
@@ -372,18 +474,18 @@ xicor(ITSDaten$LOS, ITSDaten$SAPS.II)
 ```
 
 ```{r fig.height=6, fig.width=6}
-plot(ITSDaten$SAPS.II, ITSDaten$LOS, xlab = "SAPS II", ylab = "LOS",
-     main = "LOS in Abhängigkeit von SAPS II")
+plot(ITSDaten$SAPS.II, ITSDaten$LOS, xlab = "SAPS-II", ylab = "LOS",
+     main = "LOS in Abhängigkeit von SAPS-II")
 ```
 
 ```{r fig.height=5, fig.width=5}
 ggplot(ITSDaten, aes(x=SAPS.II, y=LOS)) +
   ## shape = 19: etwas größerer Punkt
-  ## alpha = 0.25: Stärke des Blendings
-  geom_point(shape=19, alpha=0.25) +
+  ## alpha = 0.3: Stärke der Transparenz
+  geom_point(shape=19, alpha=0.3) +
   ## Beschriftung
-  ggtitle("LOS in Abhängigkeit von SAPS II") + 
-  xlab("SAPS II") + ylab("LOS")
+  ggtitle("LOS in Abhängigkeit von SAPS-II") + 
+  xlab("SAPS-II") + ylab("LOS")
 ```
 
 ## Metrische Variablen
@@ -407,7 +509,7 @@ round(mean(ITSDaten$LOS),1)
 median(ITSDaten$LOS)
 ```
 
-```{r message=FALSE}
+```{r}
 log(Gmean(ITSDaten$Bilirubin))
 ```
 
@@ -515,6 +617,73 @@ abline(v = median(ITSDaten$Temperatur), lwd = 2)
 ggplot(ITSDaten, aes(x = LOS)) + geom_histogram(binwidth = 1) +
   xlab("Aufenthaltsdauer in Tagen") + ylab("Absolute Häufigkeit") +
   ggtitle("Verteilung von LOS")
+```
+
+```{r fig.height=5, fig.width=5}
+## Boxplot an der Stelle y = 1
+ggplot(ITSDaten, aes(x = LOS, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("Aufenthaltsdauer in Tagen") +
+  ggtitle("Verteilung von LOS") +
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+```
+
+```{r fig.height=5, fig.width=5}
+## Boxplot an der Stelle y = 1
+ggplot(ITSDaten, aes(x = LOS, y = 1)) +
+  geom_boxplot() + ylim(0, 2) + xlab("Aufenthaltsdauer in Tagen") +
+  scale_x_log10(breaks = c(1, 2, 5, 10, 50, 100)) + 
+  ggtitle("Verteilung von LOS - nach log10-Transformation") +
+  ## keine Achsenbeschriftung für die y-Achse
+  ylab("") + theme(axis.ticks.y = element_blank(), 
+                   axis.text.y = element_blank())
+```
+
+```{r fig.height=10}
+gg1 <- ggplot(ITSDaten, aes(x = 1, y = LOS)) +
+  geom_skewboxplot(method = "kimber") + 
+  xlim(0, 2) + ylab("Aufenthaltsdauer in Tagen") +
+  ggtitle("Methode kimber") +
+  ## keine Achsenbeschriftung für die x-Achse
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
+gg2 <- ggplot(ITSDaten, aes(x = 1, y = LOS)) +
+  geom_skewboxplot(method = "hubert") + 
+  xlim(0, 2) + ylab("Aufenthaltsdauer in Tagen") +
+  ggtitle("Methode hubert") +
+  ## keine Achsenbeschriftung für die x-Achse
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
+gg3 <- ggplot(ITSDaten, aes(x = 1, y = LOS)) +
+  geom_skewboxplot(method = "adil") + 
+  xlim(0, 2) + ylab("Aufenthaltsdauer in Tagen") +
+  ggtitle("Methode adil") +
+  ## keine Achsenbeschriftung für die x-Achse
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
+gg4 <- ggplot(ITSDaten, aes(x = 1, y = LOS)) +
+  geom_skewboxplot(method = "babura") + 
+  xlim(0, 2) + ylab("Aufenthaltsdauer in Tagen") +
+  ggtitle("Methode babura") +
+  ## keine Achsenbeschriftung für die x-Achse
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
+gg5 <- ggplot(ITSDaten, aes(x = 1, y = LOS)) +
+  geom_skewboxplot(method = "walker") + 
+  xlim(0, 2) + ylab("Aufenthaltsdauer in Tagen") +
+  ggtitle("Methode walker") +
+  ## keine Achsenbeschriftung für die x-Achse
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
+gg6 <- ggplot(ITSDaten, aes(x = 1, y = LOS)) +
+  geom_skewboxplot(method = "junsawang") + 
+  xlim(0, 2) + ylab("Aufenthaltsdauer in Tagen") +
+  ggtitle("Methode junsawang") +
+  ## keine Achsenbeschriftung für die x-Achse
+  xlab("") + theme(axis.ticks.x = element_blank(), 
+                   axis.text.x = element_blank())
+grid.arrange(gg1, gg2, gg3, gg4, gg5, gg6, nrow = 3)
 ```
 
 ```{r fig.height=5, fig.width=5}
